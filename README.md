@@ -4,6 +4,17 @@
 
 ---
 
+## Phân công task
+
+| Member          | Tasks                    |
+| ------------------ | ----------------------------- |
+| Lê Thanh Minh-2A202600872     | setup backend + deploy                   |
+| Đỗ Minh Phúc - 2A202600585  | Custom Prompt + Evaluation |
+| Thanh Điệp - 2A202600636  | Evaluation |
+| Nguyễn Văn Minh - 2A202600904  | Dataset + report |
+| Phí Đình Mạnh - 2A202600826  | report |
+
+
 ## Mục Tiêu
 
 Xây dựng một RAG pipeline thực tế, end-to-end, từ thu thập dữ liệu pháp luật và báo chí về ma tuý → xử lý → indexing → retrieval (hybrid + vectorless fallback) → generation có citation.
