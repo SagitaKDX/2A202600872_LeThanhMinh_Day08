@@ -213,6 +213,11 @@ def lexical_search(query: str, top_k: int = 10) -> list[dict]:
     ...
 ```
 
+**✓ Thực tế Triển khai (Task 6):**
+* Sử dụng mô hình tìm kiếm từ khóa **BM25Okapi** từ thư viện `rank-bm25` để lập chỉ mục các phân mảnh văn bản.
+* Tokenize các đoạn văn bản bằng cách chuyển sang chữ thường (lowercase) và phân tách từ.
+* Hỗ trợ chấm điểm tần suất xuất hiện từ khóa chính xác (`BM25 score`), sắp xếp giảm dần và lấy các kết quả tốt nhất.
+
 **Bonus:** Nếu dùng phương pháp khác (TF-IDF, Elasticsearch, Weaviate BM25 built-in), hãy giải thích cơ chế hoạt động trong buổi demo → **+5 điểm bonus**.
 
 ---
@@ -257,6 +262,11 @@ def rerank(query: str, candidates: list[dict], top_k: int = 5) -> list[dict]:
     ...
 ```
 
+**✓ Thực tế Triển khai (Task 7):**
+* Triển khai bộ xếp hạng lại **Cross-Encoder** sử dụng mô hình **`jina-reranker-v2-base-multilingual`** thông qua Jina Reranker API để tối ưu hóa sự chú ý chéo (cross-attention) cấp độ token giữa câu hỏi và đoạn văn bản.
+* Tích hợp cơ chế **Local Fallback** tự động chuyển sang mô hình Cross-Encoder cục bộ siêu nhẹ **`mixedbread-ai/mxbai-rerank-xsmall-v1`** (~150MB) chạy trên CPU khi Jina API gặp lỗi (ví dụ: lỗi 403 Forbidden hoặc quá giới hạn yêu cầu).
+* Hỗ trợ các phương pháp rerank khác bao gồm **MMR** (Maximal Marginal Relevance) để tăng tính đa dạng của tài liệu và **RRF** (Reciprocal Rank Fusion) để gộp danh sách xếp hạng.
+
 ---
 
 ### Task 8 — PageIndex Vectorless RAG (Cá nhân)
@@ -281,6 +291,11 @@ def pageindex_search(query: str, top_k: int = 5) -> list[dict]:
     """
     ...
 ```
+
+**✓ Thực tế Triển khai (Task 8):**
+* Sử dụng **`pageindex`** SDK của VectifyAI để tải tài liệu PDF gốc lên dịch vụ PageIndex Cloud.
+* Viết hàm `pageindex_search` sử dụng `PageIndexClient` để truy vấn thông tin không qua vector similarity (reasoning-based vectorless RAG).
+* Tích hợp cơ chế kiểm tra lỗi giới hạn tài khoản (`LimitReached`) và bắt lỗi thông minh khi tài liệu chưa xử lý xong trên Cloud (`is_retrieval_ready` trả về `False`).
 
 ---
 
@@ -311,6 +326,10 @@ def retrieve(query: str, top_k: int = 5, score_threshold: float = 0.3) -> list[d
     """
     ...
 ```
+
+**✓ Thực tế Triển khai (Task 9):**
+* Xây dựng luồng xử lý hybrid kết hợp: chạy song song Semantic Search (Task 5) và Lexical Search (Task 6), gộp kết quả qua thuật toán **RRF**, sau đó chạy **Rerank** (Jina API / Local Cross-Encoder).
+* Thiết lập logic **Fallback**: nếu điểm số xếp hạng lại cao nhất nhỏ hơn ngưỡng tối thiểu `SCORE_THRESHOLD = 0.3`, hệ thống sẽ tự động gọi **PageIndex** tìm kiếm dự phòng. Nếu PageIndex rỗng hoặc lỗi, hệ thống tự động trả về kết quả Hybrid làm cứu cánh cuối cùng để tránh sập ứng dụng.
 
 ---
 
@@ -354,6 +373,10 @@ def generate_with_citation(query: str, context_chunks: list[dict]) -> str:
 - Chọn top_k và top_p phù hợp (giải thích lý do trong code comment)
 - Output phải có citation dạng `[Nguồn, Năm]`
 - Nếu không đủ evidence → trả về "I cannot verify this information"
+
+**✓ Thực tế Triển khai (Task 10):**
+* Triển khai thuật toán **Document Reordering** (`reorder_for_llm`) sắp xếp lại phân đoạn theo thứ tự `[1, 3, 5, 4, 2]` để đưa các thông tin quan trọng nhất vào đầu và cuối prompt, tránh hiện tượng LLM lãng quên thông tin ở giữa ("lost in the middle").
+* Thiết lập System Prompt chặt chẽ yêu cầu LLM (`gpt-4o-mini`) sinh câu trả lời bằng tiếng Việt kèm trích dẫn chi tiết dạng `[Nguồn, Điều]` và trả về thông báo lỗi chuẩn nếu không đủ thông tin chứng cứ.
 
 ---
 

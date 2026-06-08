@@ -120,7 +120,7 @@ def pageindex_search(query: str, top_k: int = 5) -> list[dict]:
         try:
             # Kiểm tra xem tài liệu đã sẵn sàng cho truy vấn chưa
             if not client.is_retrieval_ready(doc_id):
-                print(f"Tài liệu {doc_id} chưa sẵn sàng để thực hiện truy vấn.")
+                print(f"Tài liệu {doc_id} đang được xử lý (OCR và trích xuất cây cấu trúc) trên PageIndex Cloud. Vui lòng chờ 1-3 phút...")
                 continue
 
             res = client.submit_query(doc_id=doc_id, query=query)
