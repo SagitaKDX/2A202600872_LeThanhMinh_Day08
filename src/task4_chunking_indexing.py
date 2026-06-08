@@ -31,9 +31,6 @@ from pathlib import Path
 STANDARDIZED_DIR = Path(__file__).parent.parent / "data" / "standardized"
 
 
-# =============================================================================
-# CONFIGURATION — Giải thích lựa chọn của bạn trong comment
-# =============================================================================
 
 # TODO: Chọn chunking strategy và giải thích vì sao
 CHUNK_SIZE = 600        # Kích thước 500-800 phù hợp với giới hạn ngữ cảnh của các mô hình LLM và embedding.
@@ -41,16 +38,11 @@ CHUNK_OVERLAP = 100     # Chồng lấn 50-100 ký tự giúp giữ lại ngữ 
 CHUNKING_METHOD = "markdown_header_and_recursive"  # Sử dụng MarkdownHeaderTextSplitter để bảo toàn cấu trúc văn bản pháp luật trước, sau đó dùng RecursiveCharacterTextSplitter để khống chế kích thước tối đa.
 
 # TODO: Chọn embedding model và giải thích
-EMBEDDING_MODEL = "BAAI/bge-m3"  # Model đa ngôn ngữ cực tốt cho Tiếng Việt và hỗ trợ độ dài ngữ cảnh lớn.
-EMBEDDING_DIM = 1024
+EMBEDDING_MODEL = "text-embedding-3-small"  # Model embedding từ OpenAI, hiệu năng cao và gọn nhẹ thông qua API.
+EMBEDDING_DIM = 1536
 
 # TODO: Chọn vector store
 VECTOR_STORE = "weaviate"  # Hỗ trợ hybrid search (sparse + dense) mặc định cực mạnh.
-
-
-# =============================================================================
-# IMPLEMENTATION
-# =============================================================================
 
 def load_documents() -> list[dict]:
     """
@@ -134,15 +126,33 @@ def embed_chunks(chunks: list[dict]) -> list[dict]:
     Returns:
         Mỗi chunk dict được thêm key 'embedding': list[float]
     """
-    from sentence_transformers import SentenceTransformer
+    import os
+    from openai import OpenAI
+    from dotenv import load_dotenv
 
-    print(f"Loading embedding model: {EMBEDDING_MODEL}...")
-    model = SentenceTransformer(EMBEDDING_MODEL)
+    load_dotenv()
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key or "sk-xxx" in api_key or not api_key.strip():
+        raise ValueError("Missing or invalid OPENAI_API_KEY in .env. Please configure your OpenAI API Key before running.")
+
+    print(f"Loading embedding model: {EMBEDDING_MODEL} via OpenAI API...")
+    client = OpenAI(api_key=api_key)
     texts = [c["content"] for c in chunks]
-    print(f"Encoding {len(texts)} chunks...")
-    embeddings = model.encode(texts, show_progress_bar=True)
-    for chunk, emb in zip(chunks, embeddings):
-        chunk["embedding"] = emb.tolist()
+    print(f"Encoding {len(texts)} chunks via API...")
+    
+    # Send in batches of 100 to avoid request size limits
+    batch_size = 100
+    all_embeddings = []
+    for i in range(0, len(texts), batch_size):
+        batch_texts = texts[i:i+batch_size]
+        response = client.embeddings.create(
+            model=EMBEDDING_MODEL,
+            input=batch_texts
+        )
+        all_embeddings.extend([data.embedding for data in response.data])
+
+    for chunk, emb in zip(chunks, all_embeddings):
+        chunk["embedding"] = emb
     return chunks
 
 
@@ -167,7 +177,7 @@ def index_to_vectorstore(chunks: list[dict]):
         if not url.startswith("http://") and not url.startswith("https://"):
             url = f"https://{url}"
         print(f"Connecting to Weaviate Cloud cluster at {url}...")
-        client = weaviate.connect_to_wcs(
+        client = weaviate.connect_to_weaviate_cloud(
             cluster_url=url,
             auth_credentials=weaviate.auth.AuthApiKey(weaviate_api_key.strip('"\''))
         )

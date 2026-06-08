@@ -150,6 +150,11 @@ pip install weaviate-client
 - Ghi rõ embedding model nào, dimension bao nhiêu
 - Index thành công toàn bộ documents
 
+**✓ Thực tế Triển khai (Task 4):**
+* **Chiến lược Phân mảnh (Chunking Strategy):** Kết hợp phân tách theo tiêu đề phân cấp Markdown (**`MarkdownHeaderTextSplitter`** chia theo `#`, `##`, `###`) làm tầng sơ cấp nhằm bảo toàn cấu trúc văn bản pháp luật (Chương/Điều/Khoản) và cấu trúc bài báo. Tiếp tục áp dụng **`RecursiveCharacterTextSplitter`** (với `chunk_size=600`, `chunk_overlap=100`) làm tầng thứ cấp để khống chế độ dài của các block ký tự vừa vặn với context limit của mô hình mà không làm mất liên kết thông tin.
+* **Mô hình Nhúng (Embedding Model):** **`text-embedding-3-small`** từ OpenAI (Số chiều **1536**), nạp dữ liệu thông qua batch API 100 câu nhằm tối ưu thời gian gọi mạng.
+* **Vector Database:** **`Weaviate Cloud (WCD)`** (sử dụng Client v4 mới nhất qua `connect_to_weaviate_cloud`).
+
 ---
 
 ### Task 5 — Semantic Search Module (Cá nhân)
@@ -169,6 +174,11 @@ def semantic_search(query: str, top_k: int = 10) -> list[dict]:
 - Input: query string + top_k
 - Output: danh sách chunks có score, sorted descending
 - Phải hoạt động được với embedding model đã chọn ở Task 4
+
+**✓ Thực tế Triển khai (Task 5):**
+* Sử dụng mô hình **`text-embedding-3-small`** của OpenAI API để mã hóa câu hỏi của người dùng thành vector 1536 chiều.
+* Kết nối đến Weaviate Cloud và sử dụng cú pháp tìm kiếm vector chuyên dụng **`near_vector`** của Weaviate client v4.
+* Chuyển đổi khoảng cách vector sang điểm số tương đồng theo công thức `score = 1.0 - distance`, lọc các trường metadata như tiêu đề và vị trí phân mảnh (`chunk_index`), sắp xếp giảm dần và trả về kết quả khớp nhất.
 
 ---
 
