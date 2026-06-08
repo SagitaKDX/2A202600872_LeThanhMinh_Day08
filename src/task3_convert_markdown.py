@@ -68,7 +68,7 @@ def convert_news_articles():
 
 
 def convert_all():
-    """Convert toàn bộ files."""
+    """Chuyển đổi toàn bộ các tài liệu pháp luật và bài viết tin tức sang Markdown."""
     print("=" * 50)
     print("Task 3: Convert to Markdown (MarkItDown)")
     print("=" * 50)

@@ -17,12 +17,21 @@ BM25 hoạt động thế nào:
 
 from pathlib import Path
 
+import sys
+# Thêm thư mục gốc vào sys.path để python nhận dạng package 'src'
+project_root = str(Path(__file__).parent.parent)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 # Load corpus từ data/standardized/ bằng cách sử dụng module chunking ở Task 4
 try:
-    from src.task4_chunking_indexing import load_documents, chunk_documents
+    try:
+        from src.task4_chunking_indexing import load_documents, chunk_documents
+    except ImportError:
+        from task4_chunking_indexing import load_documents, chunk_documents
     CORPUS: list[dict] = chunk_documents(load_documents())
 except Exception as e:
-    print(f"Warning: Could not load corpus from task4: {e}")
+    print(f"Warning: Could not load corpus: {e}")
     CORPUS = []
 
 
@@ -67,7 +76,10 @@ def lexical_search(query: str, top_k: int = 10) -> list[dict]:
     if bm25 is None or not CORPUS:
         # Thử nạp lại nếu lần đầu bị lỗi hoặc rỗng
         try:
-            from src.task4_chunking_indexing import load_documents, chunk_documents
+            try:
+                from src.task4_chunking_indexing import load_documents, chunk_documents
+            except ImportError:
+                from task4_chunking_indexing import load_documents, chunk_documents
             CORPUS = chunk_documents(load_documents())
             if CORPUS:
                 bm25 = build_bm25_index(CORPUS)

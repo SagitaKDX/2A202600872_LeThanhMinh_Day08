@@ -46,9 +46,9 @@ async def crawl_article(url: str) -> dict:
             "content_markdown": str
         }
     """
-    # Try using crawl4ai first
+    # Thử crawl bằng crawl4ai trước
     try:
-        print("  -> Attempting to crawl with crawl4ai...")
+        print("  -> Đang thử crawl bằng crawl4ai...")
         from crawl4ai import AsyncWebCrawler
         async with AsyncWebCrawler() as crawler:
             result = await crawler.arun(url=url)
@@ -57,7 +57,7 @@ async def crawl_article(url: str) -> dict:
                 if isinstance(title, dict):
                     title = title.get("title")
                 if not title or title == "Unknown":
-                    # Try parsing HTML to find title
+                    # Thử phân tích HTML để lấy tiêu đề
                     from bs4 import BeautifulSoup
                     soup = BeautifulSoup(result.html, "html.parser")
                     title_tag = soup.find("h1") or soup.find("title")
@@ -72,10 +72,10 @@ async def crawl_article(url: str) -> dict:
                         "content_markdown": content_markdown,
                     }
     except Exception as e:
-        print(f"  -> crawl4ai failed or not fully initialized: {e}")
+        print(f"  -> crawl4ai thất bại hoặc chưa được khởi tạo đầy đủ: {e}")
 
-    # Fallback: Requests + BeautifulSoup + Markdownify
-    print("  -> Falling back to requests + BeautifulSoup...")
+    # Phương án dự phòng: Sử dụng requests + BeautifulSoup + Markdownify
+    print("  -> Đang sử dụng phương án dự phòng requests + BeautifulSoup...")
     import requests
     from bs4 import BeautifulSoup
     import markdownify
@@ -92,7 +92,7 @@ async def crawl_article(url: str) -> dict:
         
         soup = BeautifulSoup(response.text, "html.parser")
         
-        # Extract title specifically for VnExpress and generally
+        # Trích xuất tiêu đề (áp dụng riêng cho VnExpress hoặc chung cho các trang khác)
         title = ""
         title_tag = soup.find("h1", class_="title-detail") or soup.find("h1", class_="title_detail") or soup.find("h1") or soup.find("title")
         if title_tag:
@@ -100,11 +100,11 @@ async def crawl_article(url: str) -> dict:
         if not title:
             title = "Unknown Title"
             
-        # Clean up unwanted tags
+        # Loại bỏ các thẻ không cần thiết
         for element in soup(["script", "style", "iframe", "video", "audio", "noscript"]):
             element.decompose()
             
-        # Extract content
+        # Trích xuất nội dung chính
         content_div = soup.find("article", class_="fck_detail") or soup.find(class_="fck_detail") or soup.find("article")
         if not content_div:
             content_div = soup.find("body")
@@ -119,8 +119,8 @@ async def crawl_article(url: str) -> dict:
             "content_markdown": content_markdown,
         }
     except Exception as e:
-        print(f"  -> Fallback also failed: {e}")
-        # Return a minimal/mock structure so pipeline doesn't crash completely
+        print(f"  -> Phương án dự phòng cũng thất bại: {e}")
+        # Trả về cấu trúc tối thiểu để tránh làm sập pipeline
         return {
             "url": url,
             "title": "Failed to crawl",
