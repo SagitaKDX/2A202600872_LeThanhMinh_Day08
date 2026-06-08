@@ -14,8 +14,7 @@ project_root = str(Path(__file__).parent.parent)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.task9_retrieval_pipeline import retrieve
-from src.task10_generation import reorder_for_llm, format_context, SYSTEM_PROMPT, TEMPERATURE, TOP_P
+from RAG.rag_pipeline import retrieve, reorder_for_llm, format_context, SYSTEM_PROMPT, TEMPERATURE, TOP_P
 
 # Khởi tạo OpenAI Client
 api_key = os.getenv("OPENAI_API_KEY", "")
