@@ -667,4 +667,72 @@ pytest tests/test_individual.py::TestTask5 -v
 - [PageIndex](https://github.com/VectifyAI/PageIndex) — Vectorless RAG
 - [Jina Reranker](https://jina.ai/reranker/) — Cross-encoder reranking API
 - Liu et al. (2023), *Lost in the Middle: How Language Models Use Long Contexts*
-# Day08_RAG_pipeline_cohort2
+
+---
+
+## Tư Duy Phát Triển & Lựa Chọn Giải Pháp (Task 2 - Task 7)
+
+Tài liệu này trình bày chi tiết tư duy thiết kế hệ thống và lý do lựa chọn các phương pháp/công nghệ cụ thể từ Task 2 đến Task 7 trong hệ thống RAG (Retrieval-Augmented Generation) phục vụ tra cứu văn bản pháp luật và tin tức ma túy.
+
+### Task 2: Thu thập Tin tức (News Crawler)
+
+* **Giải pháp lựa chọn:** Sử dụng song song **Crawl4AI** (chính) và **Requests + BeautifulSoup + Markdownify** (dự phòng).
+* **Tư duy phát triển:** 
+  Khi thu thập tin tức từ các báo điện tử (như VnExpress), hệ thống thường đối mặt với cấu trúc trang phức tạp và các cơ chế chống cào dữ liệu. Tôi thiết lập cơ chế hai lớp:
+  * **Crawl4AI** đảm nhận nhiệm vụ chính vì đây là thư viện hiện đại được thiết kế riêng cho việc chuẩn bị dữ liệu LLM. Công cụ này tự động bóc tách và làm sạch các thẻ HTML thừa để trả về định dạng Markdown sạch sẽ.
+  * **Requests + BeautifulSoup + Markdownify** đóng vai trò là lưới bảo hiểm dự phòng. Nếu Crawl4AI bị lỗi hoặc môi trường thiếu thư viện headless browser, hệ thống sẽ thực hiện yêu cầu HTTP thông thường, tìm đúng khung nội dung (`article`) và tự động chuyển sang Markdown. Cơ chế dự phòng này giúp pipeline thu thập dữ liệu luôn vận hành ổn định mà không bị gián đoạn.
+
+---
+
+### Task 3: Chuyển đổi Định dạng Markdown (Markdown Converter)
+
+* **Giải pháp lựa chọn:** Sử dụng thư viện **MarkItDown** của Microsoft.
+* **Tư duy phát triển:**
+  Dữ liệu pháp luật được lưu trữ dưới nhiều định dạng thô khác nhau (PDF, DOCX, JSON). Để xây dựng một hệ thống RAG hiệu quả, chúng ta cần chuẩn hóa toàn bộ các tài liệu này về một định dạng thống nhất: **Markdown**.
+  * Tôi chọn **MarkItDown** vì thư viện này có khả năng phân tích và trích xuất cấu trúc văn bản rất tốt từ các định dạng phức tạp (như PDF và DOCX) sang văn bản thuần mà không làm mất thông tin.
+  * Việc sử dụng **Markdown** làm định dạng chuẩn hóa giúp bảo toàn các cấu trúc phân cấp quan trọng (Chương, Điều, Khoản thông qua các ký tự `#`, `##`, `###`). Cấu trúc này là chìa khóa để bộ phân mảnh dữ liệu (splitter) ở bước sau hoạt động chính xác hơn so với văn bản thô không định dạng.
+
+---
+
+### Task 4: Phân đoạn & Lập chỉ mục (Chunking & Indexing)
+
+* **Giải pháp lựa chọn:**
+  * **Phân đoạn hỗn hợp:** Kết hợp bộ tách tiêu đề Markdown (`MarkdownHeaderTextSplitter`) và bộ tách ký tự đệ quy (`RecursiveCharacterTextSplitter`).
+  * **Mô hình nhúng:** `text-embedding-3-small` (1536 chiều) của OpenAI qua API.
+  * **Cơ sở dữ liệu Vector:** Weaviate Cloud (WCD).
+* **Tư duy phát triển:**
+  * **Tại sao cần Phân đoạn hỗn hợp?** Văn bản pháp luật Việt Nam có cấu trúc phân cấp cực kỳ nghiêm ngặt (Chương -> Điều -> Khoản). Nếu chỉ chia cắt ngẫu nhiên theo số ký tự, chúng ta sẽ làm mất liên kết thông tin (ví dụ: Khoản 2 của Điều 248 sẽ bị tách rời khỏi tiêu đề "Tội tàng trữ trái phép chất ma tuý"). Bằng cách dùng `MarkdownHeaderTextSplitter` trước, tôi giữ lại thông tin tiêu đề gốc trong siêu dữ liệu (metadata) của từng đoạn. Sau đó, tôi áp dụng `RecursiveCharacterTextSplitter` với kích thước đoạn `600` ký tự và độ trùng lặp `100` ký tự để khống chế độ dài, giúp các đoạn thông tin vừa vặn với giới hạn ngữ cảnh của LLM và giữ được tính liên kết giữa các phân đoạn cạnh nhau.
+  * **Tại sao chọn text-embedding-3-small?** Thay vì tải các mô hình cục bộ nặng nề (như `bge-m3` nặng hơn 2GB) gây tốn RAM và làm chậm máy, tôi sử dụng mô hình qua API của OpenAI. Mô hình này rất nhẹ, chi phí thấp, hỗ trợ đa ngôn ngữ xuất sắc và trả về vector 1536 chiều chất lượng cao, giúp tăng độ chính xác khi đối chiếu ngữ nghĩa.
+  * **Tại sao chọn Weaviate Cloud?** Weaviate là cơ sở dữ liệu vector chuẩn công nghiệp, hỗ trợ tìm kiếm kết hợp (Hybrid Search) tích hợp sẵn. Tôi chọn phiên bản đám mây để đơn giản hóa việc triển khai và đảm bảo hệ thống có thể mở rộng dễ dàng mà không phụ thuộc vào tài nguyên phần cứng local.
+
+---
+
+### Task 5: Tìm kiếm Ngữ nghĩa (Semantic Search)
+
+* **Giải pháp lựa chọn:** Tìm kiếm tương đồng vector (`near_vector`) trên Weaviate.
+* **Tư duy phát triển:**
+  Người dùng thường không nhớ chính xác từng từ ngữ chuyên môn pháp lý khi đặt câu hỏi (ví dụ: họ gõ "chơi thuốc lắc bị phạt thế nào" thay vì "tội sử dụng trái phép chất ma tuý").
+  * Tìm kiếm ngữ nghĩa giải quyết vấn đề này bằng cách chuyển đổi câu hỏi của người dùng thành vector biểu diễn không gian thông qua OpenAI API.
+  * Sau đó, Weaviate sẽ thực hiện tính toán khoảng cách vector (Cosine distance) giữa truy vấn và toàn bộ các phân đoạn đã được lưu trữ. Những phân đoạn có ý nghĩa tương đồng nhất sẽ được trả về đầu tiên kể cả khi chúng không trùng khớp bất kỳ từ khóa thô nào với câu hỏi.
+
+---
+
+### Task 6: Tìm kiếm Từ khóa (Lexical Search)
+
+* **Giải pháp lựa chọn:** Thuật toán **BM25** (thư viện `rank-bm25`).
+* **Tư duy phát triển:**
+  Mặc dù tìm kiếm ngữ nghĩa rất thông minh, nhưng nó lại có điểm yếu là đôi khi bỏ sót các chi tiết chính xác hoặc số hiệu pháp lý (như số hiệu điều luật "Điều 248", tên chất cấm cụ thể như "Heroine", "Methamphetamine").
+  * Tôi chọn **BM25** để bù đắp cho điểm yếu trên. Thuật toán này chấm điểm dựa trên tần suất xuất hiện của từ khóa chính xác trong đoạn văn và mức độ đặc trưng của từ khóa đó trên toàn bộ ngữ liệu.
+  * Sự kết hợp giữa Tìm kiếm ngữ nghĩa (Task 5) và Tìm kiếm từ khóa (Task 6) tạo tiền đề cho việc xây dựng cơ chế Tìm kiếm kết hợp (Hybrid Search) ở các bước sau, tận dụng ưu điểm của cả hai thế giới: hiểu ý nghĩa câu hỏi của Semantic Search và tìm chính xác từ khóa của Lexical Search.
+
+---
+
+### Task 7: Chấm điểm Xếp hạng lại (Reranking)
+
+* **Giải pháp lựa chọn:** Mô hình Cross-Encoder cục bộ siêu nhẹ **`mixedbread-ai/mxbai-rerank-xsmall-v1`** (tích hợp dự phòng qua Jina Reranker API).
+* **Tư duy phát triển:**
+  Khi kết hợp kết quả từ Semantic Search và Lexical Search, chúng ta có một danh sách thô gồm nhiều phân đoạn tiềm năng. Tuy nhiên, các mô hình nhúng (Bi-Encoders) chấm điểm dựa trên việc so sánh độc lập hai vector câu hỏi và tài liệu, dẫn đến việc thiếu phân tích sâu sắc ở cấp độ từ ngữ.
+  * Tôi chọn sử dụng mô hình **Cross-Encoder** làm lớp lọc cuối cùng. Thay vì tính toán độc lập, Cross-Encoder đưa cả câu hỏi và phân đoạn tài liệu vào mô hình cùng một lúc để tính toán mức độ chú ý chéo (cross-attention) giữa các từ. Việc này giống như việc cho một chuyên gia đọc lại kỹ lưỡng cả câu hỏi và đoạn văn để chấm điểm độ liên quan.
+  * Tôi lựa chọn mô hình **`mxbai-rerank-xsmall-v1`** vì nó siêu nhẹ (~150MB), chạy cực nhanh trên CPU cục bộ mà vẫn mang lại hiệu suất xếp hạng lại xuất sắc cho tiếng Việt. Bên cạnh đó, tôi cấu hình thêm Jina Reranker API để làm phương án dự phòng hiệu năng cao khi cần thiết.
+  * Bước này đảm bảo loại bỏ các kết quả nhiễu, chỉ giữ lại những điều khoản pháp luật thực sự trả lời được câu hỏi của người dùng để đưa vào LLM ở Task 10, trực tiếp giải quyết vấn đề trích xuất sai ngữ cảnh.
+
