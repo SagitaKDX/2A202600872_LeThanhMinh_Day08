@@ -11,9 +11,49 @@ project_root = str(Path(__file__).parent.parent)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
+from openai import OpenAI
 from src.task5_semantic_search import semantic_search
 from src.task6_lexical_search import lexical_search
 from src.task7_reranking import rerank_rrf
+
+# Khởi tạo OpenAI Client cho RAG Pipeline
+api_key = os.getenv("OPENAI_API_KEY", "")
+openai_client = None
+if api_key and "sk-xxx" not in api_key:
+    openai_client = OpenAI(api_key=api_key)
+
+def check_guardrail(query: str) -> bool:
+    """
+    Kiểm tra nhanh xem câu hỏi có thuộc phạm vi của hệ thống không (Luật ma túy, tin tức nghệ sĩ).
+    Nếu nằm ngoài phạm vi, trả về False để chặn tìm kiếm và gọi LLM RAG nhằm tiết kiệm token.
+    """
+    if not openai_client:
+        return True  # Bỏ qua kiểm tra nếu không có client
+        
+    system_instruction = (
+        "You are a security and domain guardrail. Check if the user query is related to:\\n"
+        "1. Vietnamese drug laws, drug crimes, penalties, rehabilitation, or illegal substances.\\n"
+        "2. Scandals, news, arrest reports, or legal cases of celebrities, artists, or public figures.\\n"
+        "Respond ONLY with 'IN' if it matches one of these domains, or 'OUT' if it is completely out of scope "
+        "(e.g. math queries, coding queries, recipes, unrelated laws like traffic/contract law, greeting messages if not accompanied by a domain query).\\n"
+        "Do not provide explanations, only return 'IN' or 'OUT'."
+    )
+    
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": query}
+            ],
+            temperature=0.0,
+            max_tokens=3
+        )
+        result = response.choices[0].message.content.strip().upper()
+        return "IN" in result
+    except Exception as e:
+        print(f"Cảnh báo: Lỗi guardrail: {e}")
+        return True  # Cho phép đi tiếp nếu gặp lỗi kỹ thuật
 
 # Cấu hình tham số cho LLM sinh câu trả lời
 TOP_K = 5

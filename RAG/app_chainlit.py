@@ -14,7 +14,7 @@ project_root = str(Path(__file__).parent.parent)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from RAG.rag_pipeline import retrieve, reorder_for_llm, format_context, SYSTEM_PROMPT, TEMPERATURE, TOP_P
+from RAG.rag_pipeline import retrieve, reorder_for_llm, format_context, SYSTEM_PROMPT, TEMPERATURE, TOP_P, check_guardrail
 
 # Khởi tạo OpenAI Client
 api_key = os.getenv("OPENAI_API_KEY", "")
@@ -88,6 +88,20 @@ async def handle_message(message: cl.Message):
     score_threshold = 0.3
     top_k = 5
     
+    # ==========================================
+    # Bước 0: Kiểm tra Guardrail (Phạm vi câu hỏi)
+    # ==========================================
+    is_in_scope = check_guardrail(message.content)
+    if not is_in_scope:
+        fallback_msg = "Xin lỗi, tôi là trợ lý chuyên biệt về Luật Phòng chống Ma túy và Tin tức Nghệ sĩ. Câu hỏi của bạn nằm ngoài phạm vi hỗ trợ của tôi."
+        await cl.Message(content=fallback_msg).send()
+        
+        # Lưu vào lịch sử hội thoại trong Session
+        chat_history.append({"role": "user", "content": message.content})
+        chat_history.append({"role": "assistant", "content": fallback_msg})
+        cl.user_session.set("messages", chat_history)
+        return
+
     # ==========================================
     # Bước 1: Phân tích ngữ cảnh & viết lại câu hỏi
     # ==========================================

@@ -20,7 +20,7 @@ import RAG.styles
 importlib.reload(RAG.rag_pipeline)
 importlib.reload(RAG.styles)
 
-from RAG.rag_pipeline import retrieve, reorder_for_llm, format_context, SYSTEM_PROMPT, TEMPERATURE, TOP_P
+from RAG.rag_pipeline import retrieve, reorder_for_llm, format_context, SYSTEM_PROMPT, TEMPERATURE, TOP_P, check_guardrail
 from RAG.styles import apply_custom_css, render_status_dashboard, render_source_card_html
 
 # Thiết lập cấu hình trang với phong cách chuyên nghiệp
@@ -190,6 +190,25 @@ if prompt := st.chat_input("Hãy đặt câu hỏi về luật ma túy hoặc th
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         
+        # Kiểm tra Guardrail (Phạm vi câu hỏi)
+        is_in_scope = check_guardrail(prompt)
+        
+        if not is_in_scope:
+            full_response = "Xin lỗi, tôi là trợ lý chuyên biệt về Luật Phòng chống Ma túy và Tin tức Nghệ sĩ. Câu hỏi của bạn nằm ngoài phạm vi hỗ trợ của tôi."
+            message_placeholder.markdown(full_response)
+            
+            # Lưu lại vào lịch sử session state
+            st.session_state.messages.append({
+                "role": "user", 
+                "content": prompt
+            })
+            st.session_state.messages.append({
+                "role": "assistant", 
+                "content": full_response,
+                "sources": []
+            })
+            st.rerun()
+            
         # Tạo trạng thái loading đẹp mắt các bước xử lý
         with st.status("Đang truy xuất và phân tích dữ liệu...", expanded=True) as status_box:
             # Lịch sử hội thoại dạng OpenAI format
