@@ -65,36 +65,61 @@ def retrieve(
     top_k: int = TOP_K,
     score_threshold: float = 0.3,
     use_reranking: bool = True,
-) -> list[dict]:
+    doc_type_filter: str = "all",  # "all" | "legal" | "news"
+    return_comparison: bool = False,
+) -> list[dict] | dict:
     """
     Quy trình truy xuất dữ liệu cục bộ (Local Retrieval Pipeline).
     Kết hợp Semantic Search và Lexical Search (Hybrid Search), sau đó Rerank bằng
     CrossEncoder cục bộ. Bỏ qua hoàn toàn cơ chế Fallback PageIndex Cloud.
+    Hỗ trợ lọc theo doc_type và xuất kết quả trước/sau Reranking để phân tích trực quan.
     """
+    # Để lọc hiệu quả, tăng số lượng ứng viên ban đầu thu thập được
+    fetch_k = top_k * 5 if doc_type_filter != "all" else top_k * 2
+
     # 1. Tìm kiếm ngữ nghĩa (Semantic Search)
     try:
-        dense_results = semantic_search(query, top_k=top_k * 2)
+        dense_results = semantic_search(query, top_k=fetch_k)
+        if doc_type_filter != "all":
+            dense_results = [
+                r for r in dense_results 
+                if r.get("metadata", {}).get("doc_type") == doc_type_filter
+            ]
     except Exception as e:
         print(f"Cảnh báo: Lỗi khi tìm kiếm ngữ nghĩa: {e}")
         dense_results = []
 
     # 2. Tìm kiếm từ khóa (Lexical Search)
     try:
-        sparse_results = lexical_search(query, top_k=top_k * 2)
+        sparse_results = lexical_search(query, top_k=fetch_k)
+        if doc_type_filter != "all":
+            sparse_results = [
+                r for r in sparse_results 
+                if r.get("metadata", {}).get("type") == doc_type_filter or r.get("metadata", {}).get("doc_type") == doc_type_filter
+            ]
     except Exception as e:
         print(f"Cảnh báo: Lỗi khi tìm kiếm từ khóa: {e}")
         sparse_results = []
 
     # 3. Trộn kết quả dùng Reciprocal Rank Fusion (RRF)
-    merged = rerank_rrf([dense_results, sparse_results], top_k=top_k * 2)
+    merged = rerank_rrf([dense_results, sparse_results], top_k=fetch_k)
     for item in merged:
         item["source"] = "hybrid"
+
+    # Lưu giữ thứ hạng ban đầu (trước khi Rerank)
+    before_rerank = merged[:top_k]
 
     # 4. Reranking cục bộ (không dùng Jina API)
     if use_reranking and merged:
         final_results = rerank_local_cross_encoder(query, merged, top_k=top_k)
     else:
         final_results = merged[:top_k]
+
+    if return_comparison:
+        return {
+            "final": final_results,
+            "before_rerank": before_rerank
+        }
 
     return final_results
 
