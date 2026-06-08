@@ -26,10 +26,11 @@ def setup_directory():
 
 # TODO: Điền danh sách URL bài báo cần crawl
 ARTICLE_URLS = [
-    # Ví dụ:
-    # "https://vnexpress.net/...",
-    # "https://tuoitre.vn/...",
-    # "https://thanhnien.vn/...",
+    "https://vnexpress.net/dem-su-dung-ma-tuy-cuong-loan-cua-ca-si-chau-viet-cuong-3863999.html",
+    "https://vnexpress.net/ca-si-miu-le-chua-bi-khoi-to-trong-vu-an-dung-ma-tuy-o-dao-cat-ba-5074052.html",
+    "https://vnexpress.net/ca-si-long-nhat-son-ngoc-minh-bi-bat-vi-lien-quan-ma-tuy-5060857.html",
+    "https://vnexpress.net/nguoi-mau-andrea-aybar-cung-tro-ly-lam-tiec-ma-tuy-trong-can-ho-cao-cap-5059429.html",
+    "https://vnexpress.net/anh-em-ca-si-chi-dan-ru-nhieu-nguoi-choi-ma-tuy-nhu-the-nao-4929804.html"
 ]
 
 
@@ -45,18 +46,87 @@ async def crawl_article(url: str) -> dict:
             "content_markdown": str
         }
     """
-    from crawl4ai import AsyncWebCrawler
+    # Try using crawl4ai first
+    try:
+        print("  -> Attempting to crawl with crawl4ai...")
+        from crawl4ai import AsyncWebCrawler
+        async with AsyncWebCrawler() as crawler:
+            result = await crawler.arun(url=url)
+            if result and result.success:
+                title = result.metadata.get("title") if result.metadata else None
+                if isinstance(title, dict):
+                    title = title.get("title")
+                if not title or title == "Unknown":
+                    # Try parsing HTML to find title
+                    from bs4 import BeautifulSoup
+                    soup = BeautifulSoup(result.html, "html.parser")
+                    title_tag = soup.find("h1") or soup.find("title")
+                    title = title_tag.get_text().strip() if title_tag else "Unknown"
+                
+                content_markdown = result.markdown or ""
+                if len(content_markdown.strip()) > 100:
+                    return {
+                        "url": url,
+                        "title": str(title),
+                        "date_crawled": datetime.now().isoformat(),
+                        "content_markdown": content_markdown,
+                    }
+    except Exception as e:
+        print(f"  -> crawl4ai failed or not fully initialized: {e}")
 
-    # TODO: Implement crawling logic
-    # async with AsyncWebCrawler() as crawler:
-    #     result = await crawler.arun(url=url)
-    #     return {
-    #         "url": url,
-    #         "title": result.metadata.get("title", "Unknown"),
-    #         "date_crawled": datetime.now().isoformat(),
-    #         "content_markdown": result.markdown,
-    #     }
-    raise NotImplementedError("Implement crawl_article")
+    # Fallback: Requests + BeautifulSoup + Markdownify
+    print("  -> Falling back to requests + BeautifulSoup...")
+    import requests
+    from bs4 import BeautifulSoup
+    import markdownify
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+
+    loop = asyncio.get_event_loop()
+    try:
+        response = await loop.run_in_executor(None, lambda: requests.get(url, headers=headers, timeout=15))
+        response.raise_for_status()
+        response.encoding = response.apparent_encoding or "utf-8"
+        
+        soup = BeautifulSoup(response.text, "html.parser")
+        
+        # Extract title specifically for VnExpress and generally
+        title = ""
+        title_tag = soup.find("h1", class_="title-detail") or soup.find("h1", class_="title_detail") or soup.find("h1") or soup.find("title")
+        if title_tag:
+            title = title_tag.get_text().strip()
+        if not title:
+            title = "Unknown Title"
+            
+        # Clean up unwanted tags
+        for element in soup(["script", "style", "iframe", "video", "audio", "noscript"]):
+            element.decompose()
+            
+        # Extract content
+        content_div = soup.find("article", class_="fck_detail") or soup.find(class_="fck_detail") or soup.find("article")
+        if not content_div:
+            content_div = soup.find("body")
+            
+        content_html = str(content_div)
+        content_markdown = markdownify.markdownify(content_html, heading_style="ATX").strip()
+        
+        return {
+            "url": url,
+            "title": title,
+            "date_crawled": datetime.now().isoformat(),
+            "content_markdown": content_markdown,
+        }
+    except Exception as e:
+        print(f"  -> Fallback also failed: {e}")
+        # Return a minimal/mock structure so pipeline doesn't crash completely
+        return {
+            "url": url,
+            "title": "Failed to crawl",
+            "date_crawled": datetime.now().isoformat(),
+            "content_markdown": f"Failed to crawl content from {url} due to error: {e}",
+        }
 
 
 async def crawl_all():
