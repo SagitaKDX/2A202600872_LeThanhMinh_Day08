@@ -1,17 +1,102 @@
 [
   {
     "question": "Hình phạt cho tội tàng trữ trái phép chất ma tuý theo Điều 249 Bộ luật Hình sự?",
-    "expected_answer": "Phạt tù từ 1 đến 5 năm đối với trường hợp tàng trữ từ 1g đến dưới 5g heroin hoặc cocaine, hoặc chất ma tuý khác với khối lượng tương đương.",
+    "expected_answer": "Đối với tội tàng trữ trái phép chất ma túy theo Điều 249 Bộ luật Hình sự 2015 (sửa đổi 2017), hình phạt nhẹ nhất là phạt tù từ 01 năm đến 05 năm (áp dụng cho khối lượng Heroine, Cocaine, Methamphetamine, Amphetamine, MDMA từ 0,1 gam đến dưới 05 gam). Khung hình phạt cao nhất là phạt tù từ 15 năm đến 20 năm hoặc tù chung thân (áp dụng cho khối lượng tương đương từ 100 gam trở lên).",
     "expected_context": "Bộ luật Hình sự 2015, Điều 249"
   },
   {
     "question": "Luật Phòng chống ma tuý 2021 quy định những hình thức cai nghiện nào?",
-    "expected_answer": "Cai nghiện tự nguyện tại gia đình, cai nghiện tự nguyện tại cộng đồng, cai nghiện tự nguyện tại cơ sở cai nghiện, và cai nghiện bắt buộc tại cơ sở cai nghiện.",
-    "expected_context": "Luật Phòng chống ma tuý 2021, Chương V"
+    "expected_answer": "Luật Phòng chống ma túy 2021 quy định các hình thức cai nghiện bao gồm: cai nghiện ma túy tự nguyện và cai nghiện ma túy bắt buộc. Trong đó, cai nghiện tự nguyện được thực hiện tại gia đình, cộng đồng hoặc tại cơ sở cai nghiện; còn cai nghiện bắt buộc được thực hiện tại cơ sở cai nghiện bắt buộc.",
+    "expected_context": "Luật Phòng chống ma tuý 2021, Điều 28"
   },
   {
-    "question": "Danh mục các chất ma tuý thuộc nhóm I theo quy định pháp luật Việt Nam gồm những chất nào?",
-    "expected_answer": "Nhóm I gồm các chất ma tuý tuyệt đối cấm sử dụng trong y học và đời sống, bao gồm heroin, cocaine, methamphetamine, MDMA (ecstasy), cannabis (cần sa), và các chất tương tự.",
-    "expected_context": "Nghị định 57/2022/NĐ-CP, Phụ lục I"
+    "question": "Quy trình cai nghiện ma túy theo Luật Phòng chống ma tuý 2021 gồm những giai đoạn nào?",
+    "expected_answer": "Quy trình cai nghiện ma túy gồm 5 giai đoạn: 1) Tiếp nhận, phân loại; 2) Điều trị cắt cơn, giải độc, điều trị các rối loạn tâm thần, điều trị các bệnh lý khác; 3) Giáo dục, tư vấn, phục hồi hành vi, nhân cách; 4) Lao động trị liệu, học nghề; 5) Chuẩn bị tái hòa nhập cộng đồng.",
+    "expected_context": "Luật Phòng chống ma tuý 2021, Điều 29"
+  },
+  {
+    "question": "Thời hạn quản lý người sử dụng trái phép chất ma túy là bao lâu theo Luật Phòng chống ma tuý 2021?",
+    "expected_answer": "Thời hạn quản lý người sử dụng trái phép chất ma túy là 01 năm kể từ ngày Chủ tịch Ủy ban nhân dân cấp xã ra quyết định quản lý đối với người sử dụng trái phép chất ma túy từ đủ 14 tuổi trở lên.",
+    "expected_context": "Luật Phòng chống ma tuý 2021, Điều 23"
+  },
+  {
+    "question": "Chất ma túy được định nghĩa như thế nào trong Luật Phòng, chống ma túy 2021?",
+    "expected_answer": "Chất ma túy là chất gây nghiện, chất hướng thần được quy định trong các danh mục chất ma túy do Chính phủ ban hành.",
+    "expected_context": "Luật Phòng chống ma tuý 2021, Điều 2"
+  },
+  {
+    "question": "Những hành vi nào bị nghiêm cấm theo quy định của Luật Phòng, chống ma túy 2021?",
+    "expected_answer": "Các hành vi bị nghiêm cấm bao gồm: trồng cây chứa chất ma túy; nghiên cứu, giám định, sản xuất, tàng trữ, vận chuyển, mua bán, sử dụng trái phép chất ma túy; cưỡng bức, lôi kéo người khác sử dụng ma túy; chứa chấp, tổ chức sử dụng ma túy; chống lại hoặc cản trở việc phòng chống ma túy.",
+    "expected_context": "Luật Phòng chống ma tuý 2021, Điều 5"
+  },
+  {
+    "question": "Cơ quan chuyên trách phòng, chống tội phạm về ma túy gồm những lực lượng nào?",
+    "expected_answer": "Cơ quan chuyên trách phòng chống tội phạm về ma túy gồm: Lực lượng chuyên trách thuộc Công an nhân dân; Lực lượng chuyên trách thuộc Bộ đội Biên phòng, Cảnh sát biển và Hải quan.",
+    "expected_context": "Luật Phòng chống ma tuý 2021, Điều 11"
+  },
+  {
+    "question": "Người sử dụng trái phép chất ma túy bị lập danh sách và quản lý như thế nào theo Luật Phòng chống ma túy 2021?",
+    "expected_answer": "Công an cấp xã nơi cư trú có trách nhiệm lập danh sách người sử dụng trái phép chất ma túy. Ủy ban nhân dân cấp xã tổ chức quản lý người sử dụng trái phép chất ma túy cư trú tại địa phương.",
+    "expected_context": "Luật Phòng chống ma tuý 2021, Điều 23"
+  },
+  {
+    "question": "Tội sản xuất trái phép chất ma túy theo Điều 248 Bộ luật Hình sự có khung hình phạt cao nhất là gì?",
+    "expected_answer": "Tội sản xuất trái phép chất ma túy theo Điều 248 Bộ luật Hình sự có khung hình phạt cao nhất là phạt tù 20 năm, tù chung thân hoặc tử hình.",
+    "expected_context": "Bộ luật Hình sự 2015, Điều 248"
+  },
+  {
+    "question": "Đối tượng nào phải chịu hình phạt tù từ 2 năm đến 7 năm đối với tội tàng trữ trái phép chất ma tuý?",
+    "expected_answer": "Tội tàng trữ trái phép chất ma túy bị phạt tù từ 2 năm đến 7 năm đối với các trường hợp: phạm tội có tổ chức, phạm tội 2 lần trở lên, lợi dụng chức vụ, quyền hạn, tái phạm nguy hiểm, hoặc khối lượng ma túy thuộc các khung quy định cụ thể tại Khoản 2 Điều 249.",
+    "expected_context": "Bộ luật Hình sự 2015, Điều 249"
+  },
+  {
+    "question": "Đêm sử dụng ma túy của ca sĩ Châu Việt Cường và cả nhóm diễn ra vào ngày nào?",
+    "expected_answer": "Sự việc diễn ra vào khoảng 0h ngày 5/3 (năm 2018), sau khi Châu Việt Cường đi diễn ở tỉnh Hà Nam về Hà Nội và ngủ nhờ tại nhà của Phạm Đức Thế.",
+    "expected_context": "VnExpress, Đêm sử dụng ma túy cuồng loạn của ca sĩ Châu Việt Cường"
+  },
+  {
+    "question": "Nạn nhân trong vụ án Châu Việt Cường tử vong vì nguyên nhân cụ thể nào?",
+    "expected_answer": "Nạn nhân tử vong do ngạt cơ học, bít tắc hoàn toàn đường hô hấp do Châu Việt Cường nhét 33 nhánh tỏi vào miệng.",
+    "expected_context": "VnExpress, Đêm sử dụng ma túy cuồng loạn của ca sĩ Châu Việt Cường"
+  },
+  {
+    "question": "Ca sĩ Miu Lê và những người liên quan bị bắt quả tang sử dụng ma túy ở địa điểm nào?",
+    "expected_answer": "Miu Lê bị bắt quả tang sử dụng ma túy tại cơ sở lưu trú TiTi Beach thuộc bãi tắm Tùng Thu ở đặc khu Cát Hải, đảo Cát Bà, Hải Phòng.",
+    "expected_context": "VnExpress, Ca sĩ Miu Lê chưa bị khởi tố trong vụ án dùng ma túy ở đảo Cát Bà"
+  },
+  {
+    "question": "Tại sao ca sĩ Miu Lê chưa bị truy cứu trách nhiệm hình sự trong vụ dùng ma túy ở Cát Bà?",
+    "expected_answer": "Miu Lê cùng 2 người khác (Trần Minh Trang, Vũ Khương An) được xác định là 'đối tượng thụ hưởng', do đó chưa bị truy cứu trách nhiệm hình sự mà cơ quan điều tra tiếp tục đấu tranh làm rõ.",
+    "expected_context": "VnExpress, Ca sĩ Miu Lê chưa bị khởi tố trong vụ án dùng ma túy ở đảo Cát Bà"
+  },
+  {
+    "question": "Những chất ma túy nào mà nhóm của ca sĩ Miu Lê dương tính khi bị công an kiểm tra?",
+    "expected_answer": "Nhóm này dương tính với nhiều chất ma túy gồm: Methamphetamine, MDMA, Ketamine, và Nimetazepam.",
+    "expected_context": "VnExpress, Ca sĩ Miu Lê chưa bị khởi tố trong vụ án dùng ma túy ở đảo Cát Bà"
+  },
+  {
+    "question": "Ca sĩ Long Nhật và Sơn Ngọc Minh bị bắt quả tang về hành vi gì và do đơn vị nào thực hiện?",
+    "expected_answer": "Ca sĩ Long Nhật và Sơn Ngọc Minh bị Phòng Cảnh sát điều tra tội phạm về ma túy (PC04) Công an TP HCM bắt giữ về hành vi 'Tổ chức sử dụng trái phép chất ma túy'.",
+    "expected_context": "VnExpress, Ca sĩ Long Nhật, Sơn Ngọc Minh bị bắt vì liên quan ma túy"
+  },
+  {
+    "question": "Người mẫu Andrea Aybar (An Tây) bị bắt quả tang sử dụng ma túy tại đâu và thời gian nào?",
+    "expected_answer": "Andrea Aybar bị bắt quả tang vào ngày 9/11/2024 tại căn hộ 22.04, tòa nhà Topaz 01, chung cư Saigon Pearl, TP HCM.",
+    "expected_context": "VnExpress, Người mẫu Andrea Aybar cùng trợ lý làm 'tiệc ma túy' trong căn hộ cao cấp"
+  },
+  {
+    "question": "Đường dây ma túy liên quan đến người mẫu Andrea Aybar và ca sĩ Chi Dân bắt nguồn từ vụ án nào?",
+    "expected_answer": "Bắt nguồn từ Chuyên án VN10 truy xét đường dây vận chuyển ma túy qua đường hàng không từ Pháp về Việt Nam thông qua 4 tiếp viên hàng không vào tháng 3/2023.",
+    "expected_context": "VnExpress, Người mẫu Andrea Aybar cùng trợ lý làm 'tiệc ma túy' trong căn hộ cao cấp"
+  },
+  {
+    "question": "Ca sĩ Chi Dân cùng anh trai Nguyễn Trung Tín bị bắt vào ngày nào và tại đâu?",
+    "expected_answer": "Chi Dân cùng anh trai bị bắt quả tang vào ngày 8/11/2024 tại một căn nhà trên đường Cộng Hòa, phường 4, quận Tân Bình, TP HCM khi đang tổ chức tiệc ma túy.",
+    "expected_context": "VnExpress, Anh em ca sĩ Chi Dân rủ nhiều người chơi ma túy như thế nào"
+  },
+  {
+    "question": "Hành vi tổ chức sử dụng ma túy nước vui của Chi Dân và anh trai diễn ra như thế nào?",
+    "expected_answer": "Nguyễn Trung Tín đặt mua 2 gói nước vui hiệu Ferrari giá 7,1 triệu đồng, nhờ em trai chuyển khoản. Sau khi nhận hàng, Chi Dân hòa chung vào nước ngọt, uống đầu tiên và cả nhóm sử dụng theo.",
+    "expected_context": "VnExpress, Anh em ca sĩ Chi Dân rủ nhiều người chơi ma túy như thế nào"
   }
 ]
