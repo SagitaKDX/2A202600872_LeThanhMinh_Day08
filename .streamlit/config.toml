@@ -1,0 +1,3 @@
+[server]
+# Tắt tính năng tự động giám sát tệp tin thay đổi đối với thư viện lớn để tránh lỗi torchvision
+fileWatcherType = "none"
