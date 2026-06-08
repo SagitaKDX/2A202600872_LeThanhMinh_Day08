@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 import streamlit as st
 import os
+import importlib
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -13,11 +14,14 @@ project_root = str(Path(__file__).parent.parent)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-import importlib
+# Reload các module cục bộ để tránh lỗi lưu cache của Streamlit (khi fileWatcherType = "none")
 import RAG.rag_pipeline
+import RAG.styles
 importlib.reload(RAG.rag_pipeline)
+importlib.reload(RAG.styles)
 
 from RAG.rag_pipeline import retrieve, reorder_for_llm, format_context, SYSTEM_PROMPT, TEMPERATURE, TOP_P
+from RAG.styles import apply_custom_css, render_status_dashboard, render_source_card_html
 
 # Thiết lập cấu hình trang với phong cách chuyên nghiệp
 st.set_page_config(
@@ -27,141 +31,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS cho phong cách giao diện tối hiện đại, Glassmorphism, Google Fonts
-st.markdown("""
-<style>
-    /* Nhập Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;600&display=swap');
-    
-    .stApp {
-        background: linear-gradient(135deg, #090d16 0%, #15102a 100%);
-        color: #f1f5f9;
-        font-family: 'Outfit', sans-serif;
-    }
-    
-    .app-title {
-        font-family: 'Outfit', sans-serif;
-        font-weight: 800;
-        background: linear-gradient(90deg, #38bdf8 0%, #a78bfa 50%, #ec4899 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 3.2rem;
-        margin-bottom: 0.1rem;
-        text-align: center;
-        text-shadow: 0 10px 30px rgba(167, 139, 250, 0.15);
-    }
-    
-    .app-subtitle {
-        font-family: 'Outfit', sans-serif;
-        font-weight: 400;
-        font-size: 1.15rem;
-        color: #94a3b8;
-        text-align: center;
-        margin-bottom: 2.2rem;
-    }
-
-    section[data-testid="stSidebar"] {
-        background-color: rgba(15, 23, 42, 0.95) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(10px);
-    }
-
-    /* Thẻ tài liệu tham khảo với phong cách Glassmorphism */
-    .source-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 12px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .source-card:hover {
-        transform: translateY(-4px) scale(1.01);
-        border-color: rgba(56, 189, 248, 0.5);
-        box-shadow: 0 12px 40px 0 rgba(56, 189, 248, 0.15);
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    .source-header {
-        font-size: 0.95rem;
-        font-weight: 600;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .source-title {
-        color: #f8fafc;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .source-body {
-        font-size: 0.88rem;
-        color: #cbd5e1;
-        line-height: 1.55;
-    }
-
-    /* Badges nhãn tài liệu */
-    .badge {
-        padding: 2px 8px;
-        border-radius: 20px;
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-    }
-    
-    .badge-legal {
-        background: rgba(56, 189, 248, 0.12);
-        color: #38bdf8;
-        border: 1px solid rgba(56, 189, 248, 0.25);
-    }
-    
-    .badge-news {
-        background: rgba(236, 72, 153, 0.12);
-        color: #ec4899;
-        border: 1px solid rgba(236, 72, 153, 0.25);
-    }
-
-    /* Bảng trạng thái Sidebar */
-    .status-dashboard {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 20px;
-    }
-    
-    .status-item {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.8rem;
-        margin-bottom: 8px;
-        color: #94a3b8;
-    }
-    
-    .status-item:last-child {
-        margin-bottom: 0;
-    }
-    
-    .status-value {
-        font-weight: 600;
-        color: #38bdf8;
-    }
-    
-    .status-online {
-        color: #10b981;
-        font-weight: 600;
-    }
-</style>
-""", unsafe_allow_html=True)
+# Áp dụng giao diện tùy biến tối cao cấp từ file styles.py độc lập
+apply_custom_css()
 
 # Khởi tạo OpenAI Client
 api_key = os.getenv("OPENAI_API_KEY", "")
@@ -232,24 +103,9 @@ with st.sidebar:
     st.markdown("Trợ lý pháp luật phòng chống ma túy và tra cứu tin tức xã hội thông minh.")
     st.markdown("---")
     
-    # Bảng chỉ số hệ thống trực quan
+    # Bảng chỉ số hệ thống trực quan (Imported từ styles.py)
     st.markdown("#### 📡 Trạng thái Hệ thống")
-    st.markdown(f"""
-    <div class="status-dashboard">
-        <div class="status-item">
-            <span>CSDL Weaviate:</span>
-            <span class="status-online">● Online</span>
-        </div>
-        <div class="status-item">
-            <span>Reranker:</span>
-            <span class="status-value">Local (mxbai-xs)</span>
-        </div>
-        <div class="status-item">
-            <span>PageIndex Fallback:</span>
-            <span class="status-value" style="color: #94a3b8;">Bypassed</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(render_status_dashboard(), unsafe_allow_html=True)
 
     # Cấu hình bộ lọc & tham số tìm kiếm
     st.markdown("#### ⚙️ Cấu hình RAG")
@@ -322,16 +178,8 @@ for msg in st.session_state.messages:
                     doc_type = src.get("metadata", {}).get("doc_type", src.get("metadata", {}).get("type", "Chưa rõ"))
                     content_preview = src.get("content", "")
                     
-                    badge_class = "badge-legal" if doc_type == "legal" else "badge-news"
-                    col.markdown(f"""
-                    <div class='source-card'>
-                        <div class='source-header'>
-                            <span class='source-title'>📄 {source_name}</span>
-                            <span class='badge {badge_class}'>{doc_type}</span>
-                        </div>
-                        <div class='source-body'>{content_preview[:200]}...</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    # Vẽ card tài liệu thông qua template được định nghĩa trong styles.py
+                    col.markdown(render_source_card_html(source_name, doc_type, content_preview), unsafe_allow_html=True)
 
 # Nhận tin nhắn mới từ người dùng
 if prompt := st.chat_input("Hãy đặt câu hỏi về luật ma túy hoặc thông tin nghệ sĩ tại đây..."):
@@ -457,16 +305,8 @@ if prompt := st.chat_input("Hãy đặt câu hỏi về luật ma túy hoặc th
                         doc_type = src.get("metadata", {}).get("doc_type", src.get("metadata", {}).get("type", "Chưa rõ"))
                         content_preview = src.get("content", "")
                         
-                        badge_class = "badge-legal" if doc_type == "legal" else "badge-news"
-                        col.markdown(f"""
-                        <div class='source-card'>
-                            <div class='source-header'>
-                                <span class='source-title'>📄 {source_name}</span>
-                                <span class='badge {badge_class}'>{doc_type}</span>
-                            </div>
-                            <div class='source-body'>{content_preview[:200]}...</div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        # Vẽ card tài liệu thông qua template được định nghĩa trong styles.py
+                        col.markdown(render_source_card_html(source_name, doc_type, content_preview), unsafe_allow_html=True)
             
             # Lưu lại vào lịch sử session state
             st.session_state.messages.append({
